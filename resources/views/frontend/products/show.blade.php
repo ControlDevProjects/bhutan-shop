@@ -129,34 +129,12 @@
             return $v->attributeOptions->contains('id',$opt->id) && ($v->stock_type==='unlimited'||$v->stock>0);
           });
         @endphp
-        {{-- <div class="pdp-opt {{ $available ? '' : 'pdp-unavail' }}" id="opt_{{ $opt->id }}"
+        <div class="pdp-opt {{ $available ? '' : 'pdp-unavail' }}" id="opt_{{ $opt->id }}"
              data-attr="{{ $attr->id }}" data-opt="{{ $opt->id }}" data-label="{{ $opt->value }}"
              onclick="{{ $available ? 'selectOpt('.$attr->id.','.$opt->id.',\''.$opt->value.'\',this)' : '' }}"
              style="padding:7px 16px;border:1.5px solid var(--bdr);border-radius:3px;font-size:13.5px;font-weight:500;
                     cursor:{{ $available ? 'pointer' : 'not-allowed' }};transition:.15s;background:#fff;
-                    color:{{ $available ? 'var(--txt2)' : '#bbb' }};{{ !$available ? 'text-decoration:line-through;opacity:.4;' : '' }}"> --}}
-
-                    <div 
-    class="pdp-opt {{ $available ? '' : 'pdp-unavail' }}"
-    id="opt_{{ $opt->id }}"
-    data-attr="{{ $attr->id }}"
-    data-opt="{{ $opt->id }}"
-    data-label="{{ $opt->value }}"
-    onclick="{{ $available ? "selectOpt($attr->id,$opt->id,'$opt->value',this)" : '' }}"
-    style="
-        padding:7px 16px;
-        border:1.5px solid var(--bdr);
-        border-radius:3px;
-        font-size:13.5px;
-        font-weight:500;
-        cursor:{{ $available ? 'pointer' : 'not-allowed' }};
-        transition:.15s;
-        background:#fff;
-        color:{{ $available ? 'var(--txt2)' : '#bbb' }};
-        {{ !$available ? 'text-decoration:line-through;opacity:.4;' : '' }}
-    "
->
-
+                    color:{{ $available ? 'var(--txt2)' : '#bbb' }};{{ !$available ? 'text-decoration:line-through;opacity:.4;' : '' }}">
           {{ $opt->value }}
         </div>
         @endforeach
@@ -284,7 +262,6 @@
   </div>
 
   @if($product->type === 'variant' && $product->variants->count())
-  {{-- Variants Table --}}
   <div class="card">
     <div class="card-hd"><h2><i class="fas fa-layer-group" style="color:var(--pr);"></i> All Variants ({{ $product->variants->count() }})</h2></div>
     <div style="overflow-x:auto;">
@@ -300,7 +277,7 @@
           @foreach($product->variants as $v)
           <tr id="vtr_{{ $v->id }}" style="border-bottom:1px solid var(--bdr2);cursor:pointer;transition:.15s;"
               onclick="highlightVariant('{{ $v->id }}')"
-              onmouseover="this.style.background='#f9f9f9'"
+              onmouseover="if(!this.classList.contains('hl'))this.style.background='#f9f9f9'"
               onmouseout="if(!this.classList.contains('hl'))this.style.background=''">
             <td style="padding:9px 14px;font-weight:600;">{{ $v->name }}</td>
             <td style="padding:9px 14px;color:var(--pr);font-weight:700;">BTN {{ number_format($v->price,2) }}</td>
@@ -325,18 +302,217 @@
 
 </div>
 
-{{-- Related products --}}
+{{-- ════════════════════════════════════════════════════════
+     REVIEWS SECTION
+════════════════════════════════════════════════════════ --}}
+<div style="margin-top:24px;" id="reviews">
+
+  {{-- Rating Summary --}}
+  <div class="card" style="margin-bottom:18px;">
+    <div class="card-hd">
+      <h2><i class="fas fa-star" style="color:#f5a623;"></i> Ratings & Reviews</h2>
+      <span style="font-size:12px;color:var(--mut);">{{ $ratingCount }} {{ Str::plural('review',$ratingCount) }}</span>
+    </div>
+    <div class="card-bd">
+      <div style="display:grid;grid-template-columns:140px 1fr;gap:24px;align-items:center;margin-bottom:20px;">
+
+        {{-- Big score --}}
+        <div style="text-align:center;">
+          <div style="font-size:52px;font-weight:800;color:var(--txt);line-height:1;">{{ $ratingCount ? number_format($avgRating,1) : '—' }}</div>
+          <div style="display:flex;justify-content:center;gap:3px;margin:6px 0;">
+            @for($i=1;$i<=5;$i++)
+              @if($i <= round($avgRating))
+                <i class="fas fa-star" style="color:#f5a623;font-size:16px;"></i>
+              @else
+                <i class="far fa-star" style="color:#ddd;font-size:16px;"></i>
+              @endif
+            @endfor
+          </div>
+          <div style="font-size:12px;color:var(--mut);">{{ $ratingCount }} {{ Str::plural('rating',$ratingCount) }}</div>
+        </div>
+
+        {{-- Bar breakdown --}}
+        <div style="display:flex;flex-direction:column;gap:6px;">
+          @for($star=5;$star>=1;$star--)
+          @php $cnt = $product->reviews->where('rating',$star)->count(); $pct = $ratingCount ? round($cnt/$ratingCount*100) : 0; @endphp
+          <div style="display:flex;align-items:center;gap:8px;font-size:12.5px;">
+            <span style="width:14px;text-align:right;font-weight:600;color:var(--txt2);">{{ $star }}</span>
+            <i class="fas fa-star" style="color:#f5a623;font-size:11px;"></i>
+            <div style="flex:1;height:8px;background:#f0f0f0;border-radius:4px;overflow:hidden;">
+              <div style="height:100%;width:{{ $pct }}%;background:#f5a623;border-radius:4px;transition:width .6s;"></div>
+            </div>
+            <span style="width:28px;font-size:11.5px;color:var(--mut);">{{ $cnt }}</span>
+          </div>
+          @endfor
+        </div>
+      </div>
+
+      {{-- Write / Edit review form --}}
+      @auth
+      <div style="border-top:1px solid var(--bdr2);padding-top:18px;">
+        <h3 style="font-size:14px;font-weight:700;margin-bottom:14px;">
+          {{ $userReview ? '✏️ Edit Your Review' : '✍️ Write a Review' }}
+        </h3>
+        <form id="reviewForm" onsubmit="submitReview(event)">
+          @csrf
+          {{-- Star picker --}}
+          <div style="margin-bottom:14px;">
+            <div style="font-size:12px;font-weight:700;color:var(--txt2);margin-bottom:8px;text-transform:uppercase;letter-spacing:.4px;">Your Rating <span style="color:var(--err);">*</span></div>
+            <div class="star-picker" id="starPicker" style="display:flex;gap:6px;">
+              @for($i=1;$i<=5;$i++)
+              <button type="button" class="star-btn" data-val="{{ $i }}"
+                      style="font-size:28px;background:none;border:none;cursor:pointer;color:{{ ($userReview && $userReview->rating >= $i) ? '#f5a623' : '#ddd' }};padding:2px;transition:transform .1s;"
+                      onclick="setRating({{ $i }})"
+                      onmouseover="hoverRating({{ $i }})"
+                      onmouseout="resetHover()">
+                &#9733;
+              </button>
+              @endfor
+            </div>
+            <input type="hidden" id="ratingInput" name="rating" value="{{ $userReview?->rating ?? 0 }}" required>
+            <div id="ratingText" style="font-size:12px;color:var(--mut);margin-top:4px;">
+              {{ $userReview ? ['','Poor','Fair','Good','Very Good','Excellent'][$userReview->rating] : 'Click to rate' }}
+            </div>
+          </div>
+          {{-- Title --}}
+          <div style="margin-bottom:12px;">
+            <label style="display:block;font-size:12px;font-weight:700;color:var(--txt2);margin-bottom:5px;text-transform:uppercase;letter-spacing:.4px;">Review Title</label>
+            <input type="text" name="title" maxlength="120" placeholder="Summarize your experience..."
+                   value="{{ $userReview?->title ?? '' }}"
+                   style="width:100%;padding:9px 12px;border:1.5px solid var(--bdr);border-radius:var(--r);font-size:14px;font-family:var(--font);outline:none;transition:.2s;"
+                   onfocus="this.style.borderColor='var(--pr)'" onblur="this.style.borderColor='var(--bdr)'">
+          </div>
+          {{-- Body --}}
+          <div style="margin-bottom:14px;">
+            <label style="display:block;font-size:12px;font-weight:700;color:var(--txt2);margin-bottom:5px;text-transform:uppercase;letter-spacing:.4px;">Your Review</label>
+            <textarea name="body" rows="4" maxlength="2000" placeholder="Share details about your experience with this product..."
+                      style="width:100%;padding:9px 12px;border:1.5px solid var(--bdr);border-radius:var(--r);font-size:14px;font-family:var(--font);resize:vertical;outline:none;transition:.2s;"
+                      onfocus="this.style.borderColor='var(--pr)'" onblur="this.style.borderColor='var(--bdr)'">{{ $userReview?->body ?? '' }}</textarea>
+          </div>
+          <div style="display:flex;gap:10px;align-items:center;">
+            <button type="submit" id="reviewSubmitBtn"
+                    style="padding:10px 24px;background:var(--pr);color:#fff;border:none;border-radius:var(--r);font-size:14px;font-weight:700;cursor:pointer;font-family:var(--font);display:flex;align-items:center;gap:7px;transition:.15s;">
+              <i class="fas fa-paper-plane"></i> {{ $userReview ? 'Update Review' : 'Submit Review' }}
+            </button>
+            @if($userReview)
+            <button type="button" onclick="deleteReview()"
+                    style="padding:10px 16px;background:none;border:1.5px solid var(--err);color:var(--err);border-radius:var(--r);font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font);transition:.15s;"
+                    onmouseover="this.style.background='var(--err)';this.style.color='#fff'"
+                    onmouseout="this.style.background='none';this.style.color='var(--err)'">
+              <i class="fas fa-trash"></i> Delete
+            </button>
+            @endif
+            <div id="reviewMsg" style="font-size:13px;display:none;"></div>
+          </div>
+        </form>
+      </div>
+      @else
+      <div style="border-top:1px solid var(--bdr2);padding-top:16px;text-align:center;padding-bottom:4px;">
+        <a href="{{ route('login') }}" style="color:var(--pr);font-weight:600;font-size:14px;text-decoration:none;">
+          <i class="fas fa-sign-in-alt"></i> Login to write a review
+        </a>
+      </div>
+      @endauth
+    </div>
+  </div>
+
+  {{-- Review list --}}
+  @if($product->reviews->count())
+  <div class="card">
+    <div class="card-hd"><h2>Customer Reviews ({{ $product->reviews->count() }})</h2></div>
+    <div id="reviewList">
+      @foreach($product->reviews as $rev)
+      <div class="review-item" id="rev_{{ $rev->id }}"
+           style="padding:18px 20px;border-bottom:1px solid var(--bdr2);">
+        {{-- Header --}}
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px;gap:12px;">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div style="width:38px;height:38px;border-radius:50%;background:var(--pr);color:#fff;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;flex-shrink:0;">
+              {{ strtoupper(substr($rev->user->name,0,1)) }}
+            </div>
+            <div>
+              <div style="font-weight:700;font-size:13.5px;">{{ $rev->user->name }}</div>
+              <div style="font-size:11px;color:var(--mut);">{{ $rev->created_at->diffForHumans() }}</div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
+            <div style="display:inline-flex;align-items:center;gap:4px;background:{{ $rev->rating>=4 ? 'var(--ok)' : ($rev->rating==3 ? 'var(--warn)' : 'var(--err)') }};color:#fff;font-size:12px;font-weight:700;padding:3px 8px;border-radius:3px;">
+              {{ $rev->rating }} <i class="fas fa-star" style="font-size:10px;"></i>
+            </div>
+          </div>
+        </div>
+        {{-- Stars --}}
+        <div style="display:flex;gap:2px;margin-bottom:6px;">
+          @for($i=1;$i<=5;$i++)
+            @if($i <= $rev->rating)
+              <i class="fas fa-star" style="color:#f5a623;font-size:13px;"></i>
+            @else
+              <i class="far fa-star" style="color:#ddd;font-size:13px;"></i>
+            @endif
+          @endfor
+        </div>
+        {{-- Content --}}
+        @if($rev->title)
+        <div style="font-weight:700;font-size:14px;margin-bottom:5px;">{{ $rev->title }}</div>
+        @endif
+        @if($rev->body)
+        <div style="font-size:13.5px;color:var(--txt2);line-height:1.7;">{{ $rev->body }}</div>
+        @endif
+        {{-- Verified badge --}}
+        <div style="margin-top:8px;font-size:11.5px;color:var(--ok);font-weight:600;">
+          <i class="fas fa-check-circle"></i> Verified Purchase
+        </div>
+      </div>
+      @endforeach
+    </div>
+  </div>
+  @else
+  <div style="background:var(--card);border:1px solid var(--bdr);border-radius:var(--r2);padding:32px;text-align:center;color:var(--mut);">
+    <div style="font-size:36px;margin-bottom:10px;">💬</div>
+    <div style="font-weight:600;font-size:14px;margin-bottom:4px;">No reviews yet</div>
+    <div style="font-size:13px;">Be the first to share your experience!</div>
+  </div>
+  @endif
+
+</div>
+
+{{-- ════════════════════════════════════════════════════════
+     SIMILAR PRODUCTS
+════════════════════════════════════════════════════════ --}}
 @php
   $related = \App\Models\Product::with(['category','variants'])
     ->where('status','active')
     ->where('id','!=',$product->id)
     ->where('category_id',$product->category_id)
+    ->orderByRaw('is_featured DESC, created_at DESC')
     ->take(6)
     ->get();
+  // If not enough in same category, fill with other products
+  if ($related->count() < 4) {
+    $moreIds = $related->pluck('id')->push($product->id)->all();
+    $extra = \App\Models\Product::with(['category','variants'])
+      ->where('status','active')
+      ->whereNotIn('id', $moreIds)
+      ->orderByRaw('is_featured DESC, created_at DESC')
+      ->take(6 - $related->count())
+      ->get();
+    $related = $related->concat($extra);
+  }
 @endphp
 @if($related->count())
-<div style="margin-top:24px;">
-  <h2 style="font-size:18px;font-weight:800;margin-bottom:14px;">Similar Products</h2>
+<div style="margin-top:28px;">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+    <div>
+      <h2 style="font-size:18px;font-weight:800;color:var(--txt);">Similar Products</h2>
+      <div style="font-size:12.5px;color:var(--mut);margin-top:2px;">You might also like these</div>
+    </div>
+    @if($product->category)
+    <a href="{{ route('products.index',['category'=>$product->category_id]) }}"
+       style="font-size:13px;color:var(--pr);font-weight:600;text-decoration:none;">
+      More in {{ $product->category->name }} →
+    </a>
+    @endif
+  </div>
   <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:0;background:var(--card);border:1px solid var(--bdr);border-radius:var(--r2);overflow:hidden;">
     @foreach($related as $p)
       @include('frontend._product_card', ['p' => $p, 'context' => 'default'])
@@ -360,6 +536,13 @@
 #buyBtn:not([disabled]):hover{background:var(--pr2)!important;}
 #atcBtn[disabled],#buyBtn[disabled]{background:var(--mut2)!important;cursor:not-allowed!important;}
 #wl-btn.active{border-color:var(--err)!important;color:var(--err)!important;background:#fff0f0!important;}
+
+/* Reviews */
+.star-btn{transition:transform .1s,color .1s;}
+.star-btn:hover{transform:scale(1.2);}
+.review-item:last-child{border-bottom:none!important;}
+.review-item{transition:background .2s;}
+.review-item:hover{background:#fafafa;}
 </style>
 @endpush
 
@@ -597,5 +780,103 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   @endauth
 });
+
+// ══════════════════════════════════════
+//  REVIEW FUNCTIONS
+// ══════════════════════════════════════
+const ratingLabels = ['','Poor','Fair','Good','Very Good','Excellent'];
+let currentRating  = parseInt(document.getElementById('ratingInput')?.value || 0);
+
+function setRating(val) {
+  currentRating = val;
+  document.getElementById('ratingInput').value = val;
+  document.getElementById('ratingText').textContent = ratingLabels[val];
+  document.querySelectorAll('.star-btn').forEach(btn => {
+    btn.style.color = parseInt(btn.dataset.val) <= val ? '#f5a623' : '#ddd';
+  });
+}
+
+function hoverRating(val) {
+  document.querySelectorAll('.star-btn').forEach(btn => {
+    btn.style.color = parseInt(btn.dataset.val) <= val ? '#f5a623' : '#ddd';
+  });
+  const txt = document.getElementById('ratingText');
+  if (txt) txt.textContent = ratingLabels[val];
+}
+
+function resetHover() {
+  document.querySelectorAll('.star-btn').forEach(btn => {
+    btn.style.color = parseInt(btn.dataset.val) <= currentRating ? '#f5a623' : '#ddd';
+  });
+  const txt = document.getElementById('ratingText');
+  if (txt) txt.textContent = currentRating ? ratingLabels[currentRating] : 'Click to rate';
+}
+
+async function submitReview(e) {
+  e.preventDefault();
+  const rating = parseInt(document.getElementById('ratingInput').value);
+  if (!rating) {
+    showReviewMsg('Please select a star rating.', false);
+    return;
+  }
+  const btn  = document.getElementById('reviewSubmitBtn');
+  const orig = btn.innerHTML;
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
+  btn.disabled  = true;
+
+  const form = document.getElementById('reviewForm');
+  const data = {
+    rating,
+    title: form.querySelector('[name=title]').value,
+    body:  form.querySelector('[name=body]').value,
+    _token: form.querySelector('[name=_token]').value,
+  };
+
+  try {
+    const res  = await fetch(`/products/{{ $product->id }}/reviews`, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json','X-CSRF-TOKEN':data._token,'Accept':'application/json'},
+      body: JSON.stringify(data),
+    });
+    const json = await res.json();
+    if (json.success) {
+      showReviewMsg(json.message, true);
+      setTimeout(() => location.reload(), 1200);
+    } else {
+      showReviewMsg('Something went wrong. Please try again.', false);
+    }
+  } catch(err) {
+    showReviewMsg('Network error. Please try again.', false);
+  } finally {
+    btn.innerHTML = orig;
+    btn.disabled  = false;
+  }
+}
+
+async function deleteReview() {
+  if (!confirm('Delete your review?')) return;
+  try {
+    const res  = await fetch(`/products/{{ $product->id }}/reviews`, {
+      method: 'DELETE',
+      headers: {'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content, 'Accept':'application/json'},
+    });
+    const json = await res.json();
+    if (json.success) {
+      showReviewMsg('Review deleted.', true);
+      setTimeout(() => location.reload(), 900);
+    }
+  } catch(err) {
+    showReviewMsg('Could not delete. Try again.', false);
+  }
+}
+
+function showReviewMsg(msg, success) {
+  const el = document.getElementById('reviewMsg');
+  if (!el) return;
+  el.style.display   = '';
+  el.style.color     = success ? 'var(--ok)' : 'var(--err)';
+  el.style.fontWeight = '600';
+  el.innerHTML = `<i class="fas fa-${success?'check-circle':'exclamation-circle'}"></i> ${msg}`;
+}
 </script>
 @endpush

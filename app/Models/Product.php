@@ -18,6 +18,7 @@ class Product extends Model {
     public function stockLogs()  { return $this->hasMany(StockLog::class); }
     public function orderItems() { return $this->hasMany(OrderItem::class); }
     public function wishlists()  { return $this->hasMany(Wishlist::class); }
+    public function reviews()    { return $this->hasMany(Review::class)->where('is_approved',true)->latest(); }
 
     public function getTotalStockAttribute(): int|string {
         if ($this->type === 'variant') {

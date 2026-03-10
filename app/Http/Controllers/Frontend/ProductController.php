@@ -39,8 +39,12 @@ class ProductController extends Controller {
     }
 
     public function show(string $slug) {
-        $product = Product::with(['category','variants.attributeOptions.attribute','attributes.options'])
-            ->where('slug',$slug)->where('status','active')->firstOrFail();
+        $product = Product::with([
+            'category',
+            'variants.attributeOptions.attribute',
+            'attributes.options',
+            'reviews.user',
+        ])->where('slug',$slug)->where('status','active')->firstOrFail();
 
         $variantMap = [];
         foreach ($product->variants as $v) {
@@ -57,6 +61,16 @@ class ProductController extends Controller {
                 'image_3'    => $v->image_3 ? asset('storage/'.$v->image_3) : null,
             ];
         }
-        return view('frontend.products.show', compact('product','variantMap'));
+
+        // User's own review (if any)
+        $userReview = auth()->check()
+            ? $product->reviews->firstWhere('user_id', auth()->id())
+            : null;
+
+        // Average rating
+        $avgRating  = $product->reviews->avg('rating') ?? 0;
+        $ratingCount = $product->reviews->count();
+
+        return view('frontend.products.show', compact('product','variantMap','userReview','avgRating','ratingCount'));
     }
 }

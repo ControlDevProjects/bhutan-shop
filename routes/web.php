@@ -96,3 +96,8 @@ Route::get('/wishlist', [WishlistController::class,'index'])->name('wishlist.ind
 Route::post('/wishlist/toggle', [WishlistController::class,'toggle'])->name('wishlist.toggle')->middleware('auth.role:customer,admin,employee');
 Route::delete('/wishlist/{productId}', [WishlistController::class,'remove'])->name('wishlist.remove')->middleware('auth.role:customer,admin,employee');
 Route::get('/wishlist/ids', [WishlistController::class,'ids'])->name('wishlist.ids');
+
+// Reviews
+use App\Http\Controllers\Frontend\ReviewController;
+Route::post('/products/{productId}/reviews', [ReviewController::class,'store'])->name('reviews.store')->middleware('auth.role:customer,admin,employee');
+Route::delete('/products/{productId}/reviews', [ReviewController::class,'destroy'])->name('reviews.destroy')->middleware('auth.role:customer,admin,employee');
