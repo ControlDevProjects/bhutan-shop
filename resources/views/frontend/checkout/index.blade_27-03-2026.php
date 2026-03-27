@@ -91,42 +91,9 @@
   @endforeach
   </div>
   <div class="card-bd">
-    @php
-      $currency     = \App\Models\Setting::get('currency_symbol','BTN');
-      $gstPct       = (float)\App\Models\Setting::get('gst_percentage', 0);
-      $gstLabel     = \App\Models\Setting::get('gst_label', 'GST');
-      $gstInclusive = \App\Models\Setting::get('gst_inclusive','1') === '1';
-      $gstAmount    = $gstPct > 0
-        ? ($gstInclusive
-            ? round($subtotal * $gstPct / (100 + $gstPct), 2)
-            : round($subtotal * $gstPct / 100, 2))
-        : 0;
-      $grandTotal   = $subtotal + $shipping + ($gstInclusive ? 0 : $gstAmount);
-    @endphp
-    <div style="display:flex;justify-content:space-between;font-size:13.5px;margin-bottom:8px;">
-      <span>Subtotal</span><span>{{ $currency }} {{ number_format($subtotal,2) }}</span>
-    </div>
-    <div style="display:flex;justify-content:space-between;font-size:13.5px;margin-bottom:8px;">
-      <span>Delivery</span>
-      <span style="{{ $shipping==0?'color:var(--ok);font-weight:700;':'' }}">
-        {{ $shipping==0 ? 'FREE' : $currency.' '.number_format($shipping,2) }}
-      </span>
-    </div>
-    @if($gstPct > 0)
-    <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:8px;color:var(--mut);">
-      <span>{{ $gstLabel }} ({{ $gstPct }}%{{ $gstInclusive ? ', incl.' : '' }})</span>
-      <span>{{ $currency }} {{ number_format($gstAmount,2) }}</span>
-    </div>
-    @endif
-    <div style="border-top:2px dashed var(--bdr);padding-top:14px;display:flex;justify-content:space-between;font-size:18px;font-weight:800;">
-      <span>Total</span>
-      <span style="color:var(--pr);">{{ $currency }} {{ number_format($grandTotal,2) }}</span>
-    </div>
-    @if($gstPct > 0 && $gstInclusive)
-    <div style="font-size:11.5px;color:var(--mut);text-align:right;margin-top:3px;">
-      Incl. {{ $gstLabel }} of {{ $currency }} {{ number_format($gstAmount,2) }}
-    </div>
-    @endif
+    <div style="display:flex;justify-content:space-between;font-size:13.5px;margin-bottom:8px;"><span>Subtotal</span><span>BTN {{ number_format($subtotal,2) }}</span></div>
+    <div style="display:flex;justify-content:space-between;font-size:13.5px;margin-bottom:14px;"><span>Delivery</span><span style="{{ $shipping==0?'color:var(--ok);font-weight:700;':'' }}">{{ $shipping==0?'FREE':'BTN '.number_format($shipping,2) }}</span></div>
+    <div style="border-top:2px dashed var(--bdr);padding-top:14px;display:flex;justify-content:space-between;font-size:18px;font-weight:800;"><span>Total</span><span style="color:var(--pr);">BTN {{ number_format($subtotal+$shipping,2) }}</span></div>
     <button type="submit" class="btn btn-pr btn-full" style="margin-top:16px;padding:13px;font-size:15px;">
       <i class="fas fa-check-circle"></i> Place Order
     </button>

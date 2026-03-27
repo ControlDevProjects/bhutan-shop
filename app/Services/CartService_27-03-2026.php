@@ -58,26 +58,24 @@ class CartService {
     }
 
     public function calculateShipping(): float {
-        $items    = $this->get();
         $subtotal = $this->total();
-
-        // Load global defaults from settings
-        $defaultCost   = (float)(\App\Models\Setting::get('shipping_default_cost', 150));
-        $freeAbove     = (float)(\App\Models\Setting::get('shipping_free_above', 5000));
-        $expressCost   = (float)(\App\Models\Setting::get('shipping_express_cost', 300));
-
+        $items    = $this->get();
+        // If any item has free shipping, it's free
         foreach ($items as $item) {
-            if (($item['shipping_type'] ?? 'standard') === 'free')    return 0.0;
+            if (($item['shipping_type'] ?? 'standard') === 'free') return 0.0;
         }
+        // Express shipping if any item needs it
         foreach ($items as $item) {
-            if (($item['shipping_type'] ?? 'standard') === 'express') return $expressCost;
+            if (($item['shipping_type'] ?? 'standard') === 'express') return 300.0;
         }
+        // Check flat_rate
         foreach ($items as $item) {
             if (($item['shipping_type'] ?? 'standard') === 'flat_rate') {
-                return (float)($item['shipping_flat_rate'] ?? $defaultCost);
+                // Will use product's flat_rate; use 150 as default
+                return 150.0;
             }
         }
-        // Standard
-        return ($freeAbove > 0 && $subtotal >= $freeAbove) ? 0.0 : $defaultCost;
+        // Standard: free above 5000
+        return $subtotal >= 5000 ? 0.0 : 150.0;
     }
 }

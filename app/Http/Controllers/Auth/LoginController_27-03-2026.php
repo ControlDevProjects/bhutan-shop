@@ -3,7 +3,6 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Session;
 
 class LoginController extends Controller {
     public function showLogin() {
@@ -13,26 +12,8 @@ class LoginController extends Controller {
 
     public function login(Request $request) {
         $request->validate(['email'=>'required|email','password'=>'required']);
-
-        // Snapshot guest cart BEFORE session regenerate wipes it
-        $guestCart = Session::get(\App\Services\CartService::KEY, []);
-
         if (Auth::attempt(['email'=>$request->email,'password'=>$request->password,'is_active'=>true])) {
             $request->session()->regenerate();
-
-            // Merge guest cart into the now-authenticated session cart
-            if (!empty($guestCart)) {
-                $existingCart = Session::get(\App\Services\CartService::KEY, []);
-                foreach ($guestCart as $key => $item) {
-                    if (isset($existingCart[$key])) {
-                        $existingCart[$key]['qty'] += $item['qty'];
-                    } else {
-                        $existingCart[$key] = $item;
-                    }
-                }
-                Session::put(\App\Services\CartService::KEY, $existingCart);
-            }
-
             return $this->redirectAfterLogin();
         }
         return back()->withErrors(['email'=>'Invalid credentials or account inactive.'])->withInput();

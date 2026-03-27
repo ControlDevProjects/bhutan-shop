@@ -1,7 +1,7 @@
 <?php
 namespace App\Http\Controllers\Frontend;
 use App\Http\Controllers\Controller;
-use App\Models\{Order, Setting};
+use App\Models\Order;
 use App\Services\OrderService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -18,13 +18,6 @@ class OrderController extends Controller {
         if ($order->user_id !== Auth::id()) abort(403);
         $order->load(['items.product','items.variant','statusLogs']);
         return view('frontend.orders.show', compact('order'));
-    }
-
-    public function invoice(Order $order) {
-        if ($order->user_id !== Auth::id()) abort(403);
-        $order->load(['items.product','items.variant','user']);
-        $settings = Setting::allAsArray();
-        return view('frontend.orders.invoice', compact('order','settings'));
     }
 
     public function cancel(Order $order) {

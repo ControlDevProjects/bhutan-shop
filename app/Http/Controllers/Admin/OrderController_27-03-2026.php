@@ -41,10 +41,4 @@ class OrderController extends Controller {
         $order->update(['assigned_to'=>$request->assigned_to]);
         return back()->with('success','Order assigned.');
     }
-
-    public function invoice(Order $order) {
-        $order->load(['items.product','items.variant','user']);
-        $settings = \App\Models\Setting::allAsArray();
-        return view('frontend.orders.invoice', compact('order','settings'));
-    }
 }

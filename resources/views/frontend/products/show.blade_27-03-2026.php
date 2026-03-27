@@ -178,34 +178,13 @@
 
   {{-- ════ SHIPPING & DELIVERY INFO ════ --}}
   @php
-    $delivery      = $product->expected_delivery;
-    $settingsCost  = (float)\App\Models\Setting::get('shipping_default_cost', 150);
-    $settingsFree  = (float)\App\Models\Setting::get('shipping_free_above', 5000);
-    $settingsExpr  = (float)\App\Models\Setting::get('shipping_express_cost', 300);
-    $currency      = \App\Models\Setting::get('currency_symbol', 'BTN');
-    $gstPct        = (float)\App\Models\Setting::get('gst_percentage', 0);
-    $gstLabel      = \App\Models\Setting::get('gst_label', 'GST');
-    $gstInclusive  = \App\Models\Setting::get('gst_inclusive', '1') === '1';
-    $companyGstin  = \App\Models\Setting::get('company_gstin', '');
-
-    // Use product's own shipping or fall back to global settings
-    $shippingCost = match($product->shipping_type ?? 'standard') {
-      'free'      => 0,
-      'flat_rate' => (float)($product->shipping_flat_rate ?? $settingsCost),
-      'express'   => $settingsExpr,
-      default     => 0, // shown dynamically below
-    };
+    $delivery = $product->expected_delivery;
+    $shippingCost = $product->shipping_type === 'free' ? 0 : ($product->shipping_type === 'flat_rate' ? $product->shipping_flat_rate : ($product->shipping_type === 'express' ? 300 : 150));
     $shippingLabel = match($product->shipping_type ?? 'standard') {
       'free'      => 'FREE Delivery',
-      'express'   => 'Express Delivery — '.$currency.' '.number_format($settingsExpr, 2),
-      'flat_rate' => 'Flat Rate Delivery — '.$currency.' '.number_format($product->shipping_flat_rate ?? $settingsCost, 2),
-      default     => 'Standard Delivery',
-    };
-    $shippingSubtext = match($product->shipping_type ?? 'standard') {
-      'free'      => 'This product ships free regardless of order total',
-      'express'   => 'Expedited shipping — arrives faster',
-      'flat_rate' => 'Fixed delivery fee for this product',
-      default     => $currency.' '.number_format($settingsCost,2).' · Free on orders above '.$currency.' '.number_format($settingsFree,2),
+      'express'   => 'Express Delivery — BTN 300',
+      'flat_rate' => 'Delivery — BTN '.number_format($product->shipping_flat_rate ?? 150, 2),
+      default     => 'Standard Delivery (Free on orders over BTN 5,000)',
     };
   @endphp
   <div style="border:1px solid var(--bdr2);border-radius:var(--r2);overflow:hidden;margin-bottom:16px;">
@@ -226,24 +205,11 @@
       <i class="fas fa-truck" style="color:var(--info);margin-top:2px;width:16px;text-align:center;"></i>
       <div>
         <div style="font-size:13px;font-weight:700;color:var(--txt);">{{ $shippingLabel }}</div>
-        <div style="font-size:12px;color:var(--mut);margin-top:2px;">{{ $shippingSubtext }}</div>
+        @if($product->shipping_type === 'standard' || $product->shipping_type === null)
+        <div style="font-size:12px;color:var(--mut);margin-top:2px;">Standard shipping BTN 150 · Free above BTN 5,000</div>
+        @endif
       </div>
     </div>
-    {{-- GST / Tax info --}}
-    @if($gstPct > 0)
-    <div style="display:flex;align-items:flex-start;gap:12px;padding:12px 14px;border-bottom:1px solid var(--bdr2);">
-      <i class="fas fa-receipt" style="color:var(--warn);margin-top:2px;width:16px;text-align:center;"></i>
-      <div>
-        <div style="font-size:13px;font-weight:700;color:var(--txt);">
-          {{ $gstLabel }}: {{ $gstPct }}%
-          @if($companyGstin) <span style="font-family:monospace;font-size:11px;color:var(--mut);">· {{ $companyGstin }}</span> @endif
-        </div>
-        <div style="font-size:12px;color:var(--mut);margin-top:2px;">
-          {{ $gstInclusive ? 'Price is inclusive of '.$gstLabel : $gstLabel.' will be added at checkout' }}
-        </div>
-      </div>
-    </div>
-    @endif
     {{-- Delivery Location --}}
     <div style="display:flex;align-items:flex-start;gap:12px;padding:12px 14px;border-bottom:1px solid var(--bdr2);">
       <i class="fas fa-map-marker-alt" style="color:var(--pr);margin-top:2px;width:16px;text-align:center;"></i>

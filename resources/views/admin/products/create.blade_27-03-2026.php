@@ -27,11 +27,17 @@
         <div class="fg"><label class="lbl">Status</label><select name="status" class="fc"><option value="active">Active</option><option value="inactive">Inactive</option></select></div>
         <div class="fg" style="padding-top:22px;"><label style="display:flex;align-items:center;gap:8px;cursor:pointer;"><input type="checkbox" name="is_featured" value="1" {{ old('is_featured')?'checked':'' }}> <span class="lbl" style="margin:0;">Featured Product ⭐</span></label></div>
     </div>
-    {{-- Shipping fields hidden — controlled via Store Settings --}}
-    <div style="display:none;">
-        <select name="shipping_type"><option value="standard" selected></option></select>
-        <input type="number" name="shipping_flat_rate" value="0">
-        <input type="number" name="processing_days" value="1">
+    <div class="g3">
+        <div class="fg"><label class="lbl">Shipping Type</label>
+            <select name="shipping_type" id="shipping_type_create" class="fc" onchange="toggleFlatRate('create')">
+                <option value="standard">Standard (BTN 150 / Free above 5000)</option>
+                <option value="free">Always Free</option>
+                <option value="express">Express (BTN 300)</option>
+                <option value="flat_rate">Flat Rate</option>
+            </select>
+        </div>
+        <div class="fg" id="flat_rate_create" style="display:none;"><label class="lbl">Flat Rate Amount (BTN)</label><input type="number" name="shipping_flat_rate" class="fc" step="0.01" min="0" value="{{ old('shipping_flat_rate',0) }}" placeholder="150.00"></div>
+        <div class="fg"><label class="lbl">Processing Days</label><input type="number" name="processing_days" class="fc" min="0" max="30" value="{{ old('processing_days',1) }}" placeholder="1"></div>
     </div>
 </div>
 </div>

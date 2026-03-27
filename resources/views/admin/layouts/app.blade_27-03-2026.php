@@ -126,10 +126,6 @@ tr:last-child td{border-bottom:none;}
     <a href="{{ route('admin.employees.index') }}" class="nav-a {{ request()->routeIs('admin.employees.*') ? 'on' : '' }}">
         <div class="nav-left"><i class="fas fa-user-tie"></i> Employees</div>
     </a>
-    <div class="nav-sec">Configuration</div>
-    <a href="{{ route('admin.settings.index') }}" class="nav-a {{ request()->routeIs('admin.settings.*') ? 'on' : '' }}">
-        <div class="nav-left"><i class="fas fa-cog"></i> Store Settings</div>
-    </a>
     @endif
     <div class="nav-sec">Store</div>
     <a href="{{ route('products.index') }}" target="_blank" class="nav-a">

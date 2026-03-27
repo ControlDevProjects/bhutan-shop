@@ -3,7 +3,6 @@
 @section('page-title','Order Details')
 @section('topbar-actions')
     <a href="{{ route('admin.orders.index') }}" class="btn btn-sc btn-sm"><i class="fas fa-arrow-left"></i> Back</a>
-    <a href="{{ route('admin.orders.invoice',$order) }}" target="_blank" class="btn btn-sc btn-sm"><i class="fas fa-file-invoice"></i> View Invoice</a>
 @endsection
 @section('content')
 @php

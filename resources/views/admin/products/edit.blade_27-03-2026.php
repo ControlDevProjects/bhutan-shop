@@ -34,11 +34,17 @@
         <div class="fg"><label class="lbl">Status</label><select name="status" class="fc"><option value="active" {{ $product->status==='active'?'selected':'' }}>Active</option><option value="inactive" {{ $product->status==='inactive'?'selected':'' }}>Inactive</option></select></div>
     </div>
     <div class="fg"><label style="display:flex;align-items:center;gap:8px;cursor:pointer;"><input type="checkbox" name="is_featured" value="1" {{ $product->is_featured?'checked':'' }}> <span class="lbl" style="margin:0;">Featured Product ⭐</span></label></div>
-    {{-- Shipping fields hidden — controlled via Store Settings --}}
-    <div style="display:none;">
-        <input type="hidden" name="shipping_type" value="{{ $product->shipping_type ?? 'standard' }}">
-        <input type="hidden" name="shipping_flat_rate" value="{{ $product->shipping_flat_rate ?? 0 }}">
-        <input type="hidden" name="processing_days" value="{{ $product->processing_days ?? 1 }}">
+    <div class="g3" style="margin-top:10px;">
+        <div class="fg"><label class="lbl">Shipping Type</label>
+            <select name="shipping_type" id="shipping_type_edit" class="fc" onchange="toggleFlatRate('edit')">
+                <option value="standard" {{ ($product->shipping_type??'standard')==='standard'?'selected':'' }}>Standard (BTN 150 / Free above 5000)</option>
+                <option value="free" {{ ($product->shipping_type??'')==='free'?'selected':'' }}>Always Free</option>
+                <option value="express" {{ ($product->shipping_type??'')==='express'?'selected':'' }}>Express (BTN 300)</option>
+                <option value="flat_rate" {{ ($product->shipping_type??'')==='flat_rate'?'selected':'' }}>Flat Rate</option>
+            </select>
+        </div>
+        <div class="fg" id="flat_rate_edit" style="{{ ($product->shipping_type??'')==='flat_rate'?'':'display:none' }}"><label class="lbl">Flat Rate (BTN)</label><input type="number" name="shipping_flat_rate" class="fc" step="0.01" min="0" value="{{ old('shipping_flat_rate',$product->shipping_flat_rate??150) }}"></div>
+        <div class="fg"><label class="lbl">Processing Days</label><input type="number" name="processing_days" class="fc" min="0" max="30" value="{{ old('processing_days',$product->processing_days??1) }}"></div>
     </div>
 </div>
 </div>
@@ -84,15 +90,16 @@
     <div><span style="color:var(--mut);">Created:</span> {{ $product->created_at->format('d M Y') }}</div>
 </div>
 </div>
-{{-- @if(auth()->user()->isAdmin())
+@if(auth()->user()->isAdmin())
 <div class="card" style="border:1px solid #f5b7b1;">
 <div class="card-hd"><h2 style="color:var(--err);">Danger Zone</h2></div>
 <div class="card-bd">
-<form method="POST" action="{{ route('admin.products.destroy',$product) }}" id="deleteProductForm">@csrf @method('DELETE')</form>
-<button type="submit" form="deleteProductForm" class="btn btn-err" style="width:100%;justify-content:center;" data-confirm="Permanently delete '{{ $product->name }}'? This cannot be undone."><i class="fas fa-trash"></i> Delete Product</button>
+<form method="POST" action="{{ route('admin.products.destroy',$product) }}">@csrf @method('DELETE')
+<button type="submit" class="btn btn-err" style="width:100%;justify-content:center;" data-confirm="Permanently delete '{{ $product->name }}'? This cannot be undone."><i class="fas fa-trash"></i> Delete Product</button>
+</form>
 </div>
 </div>
-@endif --}}
+@endif
 </div>
 </div>
 <div style="margin-top:16px;display:flex;justify-content:flex-end;">

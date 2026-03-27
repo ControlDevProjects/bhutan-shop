@@ -61,25 +61,12 @@ class Product extends Model {
 
     // Compute shipping cost for this product based on order subtotal
     public function getShippingCost(float $orderSubtotal): float {
-        $defaultCost = (float)\App\Models\Setting::get('shipping_default_cost', 150);
-        $freeAbove   = (float)\App\Models\Setting::get('shipping_free_above', 5000);
-        $expressCost = (float)\App\Models\Setting::get('shipping_express_cost', 300);
         return match($this->shipping_type ?? 'standard') {
             'free'       => 0.0,
-            'flat_rate'  => (float)($this->shipping_flat_rate ?? $defaultCost),
-            'express'    => $expressCost,
-            default      => ($freeAbove > 0 && $orderSubtotal >= $freeAbove) ? 0.0 : $defaultCost,
+            'flat_rate'  => (float)($this->shipping_flat_rate ?? 150),
+            'express'    => 300.0,
+            default      => $orderSubtotal >= 5000 ? 0.0 : 150.0,
         };
-    }
-
-    // GST amount on a given price (uses product-level override or global setting)
-    public function getGstAmount(float $price): float {
-        $pct = (float)\App\Models\Setting::get('gst_percentage', 0);
-        if ($pct <= 0) return 0.0;
-        $inclusive = \App\Models\Setting::get('gst_inclusive', '1') === '1';
-        return $inclusive
-            ? round($price * $pct / (100 + $pct), 2)   // extract from price
-            : round($price * $pct / 100, 2);             // add on top
     }
 
     // Expected delivery date

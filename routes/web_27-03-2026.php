@@ -1,6 +1,6 @@
 <?php
 use App\Http\Controllers\Auth\LoginController;
-use App\Http\Controllers\Admin\{DashboardController, ProductController as AdminPC, OrderController as AdminOC, AttributeController, CategoryController, EmployeeController, SettingController};
+use App\Http\Controllers\Admin\{DashboardController, ProductController as AdminPC, OrderController as AdminOC, AttributeController, CategoryController, EmployeeController};
 use App\Http\Controllers\Frontend\{ProductController, CartController, CheckoutController, OrderController, ProfileController, HomeController};
 use Illuminate\Support\Facades\Route;
 
@@ -36,7 +36,6 @@ Route::middleware(['auth.role:customer,admin,employee'])->group(function() {
     Route::prefix('my')->name('orders.')->group(function() {
         Route::get('/orders', [OrderController::class,'index'])->name('index');
         Route::get('/orders/{order}', [OrderController::class,'show'])->name('show');
-        Route::get('/orders/{order}/invoice', [OrderController::class,'invoice'])->name('invoice');
         Route::post('/orders/{order}/cancel',[OrderController::class,'cancel'])->name('cancel');
     });
 
@@ -64,7 +63,6 @@ Route::prefix('admin')->name('admin.')->middleware(['auth.role:admin,employee'])
     // Orders
     Route::get('/orders', [AdminOC::class,'index'])->name('orders.index');
     Route::get('/orders/{order}', [AdminOC::class,'show'])->name('orders.show');
-    Route::get('/orders/{order}/invoice', [AdminOC::class,'invoice'])->name('orders.invoice');
     Route::post('/orders/{order}/status', [AdminOC::class,'updateStatus'])->name('orders.status');
     Route::post('/orders/{order}/pay', [AdminOC::class,'markPaid'])->name('orders.pay');
     Route::post('/orders/{order}/assign', [AdminOC::class,'assignEmployee'])->name('orders.assign');
@@ -89,9 +87,6 @@ Route::prefix('admin')->name('admin.')->middleware(['auth.role:admin,employee'])
         Route::get('/employees/{employee}/edit', [EmployeeController::class,'edit'])->name('employees.edit');
         Route::put('/employees/{employee}', [EmployeeController::class,'update'])->name('employees.update');
         Route::delete('/employees/{employee}', [EmployeeController::class,'destroy'])->name('employees.destroy');
-
-        Route::get('/settings', [SettingController::class,'index'])->name('settings.index');
-        Route::put('/settings', [SettingController::class,'update'])->name('settings.update');
     });
 });
 
