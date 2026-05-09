@@ -61,14 +61,62 @@ class ProductService {
         StockLog::create(['product_id'=>$productId,'variant_id'=>$variantId,'old_stock'=>$oldStock,'new_stock'=>$newStock,'old_price'=>$oldPrice,'new_price'=>$newPrice,'changed_by'=>$by,'created_at'=>now()]);
     }
 
-    public function decrementStock(Product $product, ?int $variantId, int $qty): void {
+    /* public function decrementStock(Product $product, ?int $variantId, int $qty): void {
         if ($variantId) {
             $v = Variant::find($variantId);
             if ($v && $v->stock_type==='limited') $v->decrement('stock',$qty);
         } else {
             if ($product->stock_type==='limited') $product->decrement('stock',$qty);
         }
+    } */
+
+    /* public function decrementStock(Product $product, ?int $variantId, int $qty): void
+    {
+        DB::transaction(function () use ($product, $variantId, $qty) {
+
+            if ($variantId) {
+                $variant = Variant::lockForUpdate()->findOrFail($variantId);
+                if ($variant->stock_type !== 'limited') {
+                    return;
+                }
+                if ($variant->stock < $qty) {
+                    throw new \Exception("Only {$variant->stock} item(s) left for {$variant->name}");
+                }
+                $variant->update([ 'stock' => max(0, $variant->stock - $qty) ]);
+                return;
+            }
+
+            $lockedProduct = Product::lockForUpdate()->findOrFail($product->id);
+
+            if ($lockedProduct->stock_type !== 'limited') {
+                return;
+            }
+
+            if ($lockedProduct->stock < $qty) {
+                throw new \Exception("Only {$lockedProduct->stock} item(s) left in stock");
+            }
+
+            $lockedProduct->update([
+                'stock' => max(0, $lockedProduct->stock - $qty)
+            ]);
+        });
+    } */
+
+    public function decrementStock(Product $product, ?int $variantId, int $qty): void
+    {
+        if ($variantId) {
+            $variant = Variant::findOrFail($variantId);
+            if ($variant->stock_type === 'limited') {
+                $variant->decrement('stock', $qty);
+            }
+            return;
+        }
+
+        if ($product->stock_type === 'limited') {
+            $product->decrement('stock', $qty);
+        }
     }
+
 
     public function incrementStock(Product $product, ?int $variantId, int $qty): void {
         if ($variantId) {
@@ -78,4 +126,21 @@ class ProductService {
             if ($product->stock_type==='limited') $product->increment('stock',$qty);
         }
     }
+
+    public function checkStock(Product $product, ?int $variantId, int $qty): void
+    {
+        if ($variantId) {
+            $variant = Variant::lockForUpdate()->findOrFail($variantId);
+            if ($variant->stock_type === 'limited' && $variant->stock < $qty) {
+                 throw new \Exception("Only {$variant->stock} item(s) left for {$product->name} - {$variant->name}");
+            }
+            return;
+        }
+
+        $lockedProduct = Product::lockForUpdate()->findOrFail($product->id);
+        if ($lockedProduct->stock_type === 'limited' && $lockedProduct->stock < $qty) {
+            throw new \Exception("Only {$lockedProduct->stock} item(s) left for {$lockedProduct->name}");
+        }
+    }
+
 }

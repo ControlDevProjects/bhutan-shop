@@ -280,13 +280,6 @@ footer{background:#1a1a2e;color:rgba(255,255,255,.6);margin-top:40px;}
 @media(max-width:1100px){.prod-grid{grid-template-columns:repeat(3,1fr);}}
 @media(max-width:900px){.shop-layout{grid-template-columns:1fr;}.sidebar-wrap{display:none;}.ftr-top{grid-template-columns:1fr 1fr;}}
 @media(max-width:600px){.prod-grid{grid-template-columns:repeat(2,1fr);}.ftr-top{grid-template-columns:1fr;}}
-
-.qap-opt{
-  transition:.2s;
-}
-
-
-
 </style>
 @stack('styles')
 </head>
@@ -552,7 +545,7 @@ function qapSelectOpt(attrId, optId, label, el) {
   updateQAPState();
 }
 
-/* function updateQAPState() {
+function updateQAPState() {
   if (!qapProduct) return;
   const p = qapProduct;
   const atcBtn = document.getElementById('qap-atc-btn');
@@ -651,170 +644,6 @@ function qapSelectOpt(attrId, optId, label, el) {
     if (atcBtn) { atcBtn.disabled = true; buyBtn.disabled = true; }
   }
 }
- */
-
-function updateQAPState() {
-  if (!qapProduct) return;
-
-  const p = qapProduct;
-  const atcBtn = document.getElementById('qap-atc-btn');
-  const buyBtn = document.getElementById('qap-buy-btn');
-  const stockEl = document.getElementById('qap-stock');
-  const priceEl = document.getElementById('qap-price');
-  const varName = document.getElementById('qap-variant-name');
-
-  if (p.type !== 'variant') return;
-
-  p.attributes.forEach((thisAttr, attrIndex) => {
-
-    thisAttr.options.forEach(opt => {
-      const el = document.querySelector(
-        `.qap-opt[data-attr="${thisAttr.id}"][data-opt="${opt.id}"]`
-      );
-
-      if (!el) return;
-
-      const previousSelections = p.attributes
-        .slice(0, attrIndex)
-        .map(a => qapSelectedOpts[a.id])
-        .filter(Boolean)
-        .map(Number);
-
-      const compatible = Object.entries(p.variant_map).some(([key, v]) => {
-        if (!v.in_stock) return false;
-
-        const ids = key.split(',').map(Number);
-
-        return (
-          ids.includes(opt.id) &&
-          previousSelections.every(id => ids.includes(id))
-        );
-      });
-
-      // FIRST ATTRIBUTE
-      if (attrIndex === 0) {
-        if (compatible) {
-          el.style.display = '';
-          el.classList.remove('unavail');
-          el.onclick = () =>
-            qapSelectOpt(thisAttr.id, opt.id, opt.value, el);
-        } else {
-          el.style.display = 'none';
-        }
-      }
-
-      // OTHER ATTRIBUTES
-      else {
-        const prevSelected = qapSelectedOpts[p.attributes[attrIndex - 1].id];
-
-        if (!prevSelected) {
-          el.style.display = 'none';
-          return;
-        }
-
-        el.style.display = '';
-
-        if (compatible) {
-          el.classList.remove('unavail');
-          el.style.opacity = '';
-          el.style.textDecoration = '';
-          el.style.cursor = 'pointer';
-
-          el.onclick = () =>
-            qapSelectOpt(thisAttr.id, opt.id, opt.value, el);
-
-        } else {
-          el.classList.add('unavail');
-          el.style.opacity = '0.35';
-          el.style.textDecoration = 'line-through';
-          el.style.cursor = 'not-allowed';
-          el.onclick = null;
-
-          /* if (qapSelectedOpts[thisAttr.id] === opt.id) {
-            delete qapSelectedOpts[thisAttr.id];
-
-            const lbl = document.getElementById(
-              `qap-attr-sel-${thisAttr.id}`
-            );
-
-            if (lbl) lbl.textContent = 'Select...';
-          } */
-
-          if (qapSelectedOpts[thisAttr.id] === opt.id) {
-            delete qapSelectedOpts[thisAttr.id];
-
-            const lbl = document.getElementById(
-              `qap-attr-sel-${thisAttr.id}`
-            );
-
-            if (lbl) lbl.textContent = 'Select...';
-
-            el.classList.remove('selected');
-
-            // Clear all attributes below this one
-            p.attributes.forEach((laterAttr, laterIndex) => {
-                if (laterIndex > attrIndex) {
-                    delete qapSelectedOpts[laterAttr.id];
-
-                    const laterLbl = document.getElementById(
-                        `qap-attr-sel-${laterAttr.id}`
-                    );
-
-                    if (laterLbl) laterLbl.textContent = 'Select...';
-
-                    document.querySelectorAll(
-                        `.qap-opt[data-attr="${laterAttr.id}"]`
-                    ).forEach(o => {
-                        o.classList.remove('selected');
-                    });
-                }
-            });
-        }
-
-
-        }
-      }
-    });
-  });
-
-  const allSelected = p.attributes.every(a => qapSelectedOpts[a.id]);
-
-  if (!allSelected) {
-    stockEl.className = 'qap-stock';
-    stockEl.innerHTML =
-      '<span style="color:var(--mut);">Select options</span>';
-
-    atcBtn.disabled = true;
-    buyBtn.disabled = true;
-
-    if (varName) varName.textContent = '';
-
-    return;
-  }
-
-  const key = Object.values(qapSelectedOpts)
-    .map(Number)
-    .sort((a,b)=>a-b)
-    .join(',');
-
-  const v = p.variant_map[key];
-
-  if (!v) return;
-
-  priceEl.textContent = 'BTN ' + formatPrice(v.price);
-  varName.textContent = v.name;
-
-  const inStock = v.in_stock;
-
-  stockEl.className = 'qap-stock ' + (inStock ? 'ok' : 'none');
-  stockEl.innerHTML = inStock
-    ? '<i class="fas fa-check-circle"></i> In Stock'
-    : '<i class="fas fa-times-circle"></i> Out of Stock';
-
-  atcBtn.disabled = !inStock;
-  buyBtn.disabled = !inStock;
-}
-
 
 function qapQty(d) {
   const inp = document.getElementById('qap-qty');
@@ -947,7 +776,6 @@ document.addEventListener('DOMContentLoaded', () => {
   @endauth
 });
 </script>
-
 @stack('scripts')
 </body>
 </html>

@@ -115,6 +115,9 @@ tr:last-child td{border-bottom:none;}
     <a href="{{ route('admin.products.index') }}" class="nav-a {{ request()->routeIs('admin.products.*') ? 'on' : '' }}">
         <div class="nav-left"><i class="fas fa-box"></i> Products</div>
     </a>
+    <a href="{{ route('admin.stock.index') }}" class="nav-a {{ request()->routeIs('admin.stock.*') ? 'on' : '' }}">
+        <div class="nav-left"><i class="fas fa-cubes"></i> Stock</div>
+    </a>
     <a href="{{ route('admin.categories.index') }}" class="nav-a {{ request()->routeIs('admin.categories.*') ? 'on' : '' }}">
         <div class="nav-left"><i class="fas fa-tags"></i> Categories</div>
     </a>

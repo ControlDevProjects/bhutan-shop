@@ -17,7 +17,7 @@ class Order extends Model {
     public function statusLogs() { return $this->hasMany(OrderStatusLog::class)->orderBy('created_at','desc'); }
 
     public static function generateNumber(): string {
-        return 'BHT-'.date('Ymd').'-'.strtoupper(substr(uniqid(),0,6));
+        return 'BHT-'.date('YmdHis').'-'.strtoupper(substr(uniqid(),0,6));
     }
 
     public function getStatusColorAttribute(): string {

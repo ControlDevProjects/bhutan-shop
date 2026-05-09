@@ -1,6 +1,6 @@
 <?php
 use App\Http\Controllers\Auth\LoginController;
-use App\Http\Controllers\Admin\{DashboardController, ProductController as AdminPC, OrderController as AdminOC, AttributeController, CategoryController, EmployeeController, SettingController};
+use App\Http\Controllers\Admin\{DashboardController, ProductController as AdminPC, OrderController as AdminOC, AttributeController, CategoryController, EmployeeController, SettingController, StockController};
 use App\Http\Controllers\Frontend\{ProductController, CartController, CheckoutController, OrderController, ProfileController, HomeController};
 use Illuminate\Support\Facades\Route;
 
@@ -60,6 +60,11 @@ Route::prefix('admin')->name('admin.')->middleware(['auth.role:admin,employee'])
     Route::delete('/products/{product}/variants/{variant}', [AdminPC::class,'destroyVariant'])->name('products.variants.destroy');
     Route::get('/products/{product}/stock-logs', [AdminPC::class,'stockLogs'])->name('products.stock-logs');
     Route::get('/products/{product}/variant-data', [AdminPC::class,'variantData'])->name('products.variant-data');
+
+    // Stock Management
+    Route::get('/stock', [StockController::class,'index'])->name('stock.index');
+    Route::get('/stock/{product}', [StockController::class,'show'])->name('stock.show');
+    Route::post('/stock/{product}/update', [StockController::class,'update'])->name('stock.update');
 
     // Orders
     Route::get('/orders', [AdminOC::class,'index'])->name('orders.index');

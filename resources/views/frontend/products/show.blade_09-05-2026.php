@@ -588,7 +588,7 @@ const productId   = {{ $product->id }};
 const productType = '{{ $product->type }}';
 const selectedOpts = {};
 
-/* function selectOpt(attrId, optId, label, el) {
+function selectOpt(attrId, optId, label, el) {
   document.querySelectorAll(`.pdp-opt[data-attr="${attrId}"]`).forEach(o => o.classList.remove('selected'));
   el.classList.add('selected');
   selectedOpts[attrId] = optId;
@@ -678,127 +678,7 @@ function updatePdpState() {
     if (stockEl) { stockEl.style.color='var(--err)'; stockEl.style.fontWeight='700'; stockEl.innerHTML='<i class="fas fa-times-circle"></i> Combination not available'; }
     enableButtons(false);
   }
-} */
-
-const attrOrder = [...document.querySelectorAll('[id^="selLabel_"]')]
-    .map(el => parseInt(el.id.replace('selLabel_', '')));
-
-function selectOpt(attrId, optId, label, el) {
-    const currentIndex = attrOrder.indexOf(attrId);
-
-    // Remove selection of current attribute
-    document.querySelectorAll(`.pdp-opt[data-attr="${attrId}"]`)
-        .forEach(o => o.classList.remove('selected'));
-
-    el.classList.add('selected');
-    selectedOpts[attrId] = optId;
-
-    const lbl = document.getElementById(`selLabel_${attrId}`);
-    if (lbl) lbl.textContent = label;
-
-    // Reset all next attributes
-    for (let i = currentIndex + 1; i < attrOrder.length; i++) {
-        const nextAttr = attrOrder[i];
-
-        delete selectedOpts[nextAttr];
-
-        document.querySelectorAll(`.pdp-opt[data-attr="${nextAttr}"]`)
-            .forEach(o => {
-                o.classList.remove('selected');
-                o.classList.add('pdp-unavail');
-                o.style.opacity = '0.35';
-                o.style.cursor = 'not-allowed';
-                o.style.textDecoration = 'line-through';
-            });
-
-        const nextLbl = document.getElementById(`selLabel_${nextAttr}`);
-        if (nextLbl) nextLbl.textContent = '';
-    }
-
-    enableNextAttribute(currentIndex + 1);
-    updatePdpState();
 }
-
-function enableNextAttribute(index) {
-    if (index >= attrOrder.length) return;
-
-    const attrId = attrOrder[index];
-
-    document.querySelectorAll(`.pdp-opt[data-attr="${attrId}"]`).forEach(el => {
-        const optId = parseInt(el.dataset.opt);
-
-        const compatible = Object.entries(variantMap).some(([key, v]) => {
-            if (v.stock_type !== 'unlimited' && v.stock <= 0) return false;
-
-            const ids = key.split(',').map(Number);
-
-            return Object.values(selectedOpts).every(sel => ids.includes(parseInt(sel)))
-                && ids.includes(optId);
-        });
-
-        if (compatible) {
-            el.classList.remove('pdp-unavail');
-            el.style.opacity = '';
-            el.style.cursor = 'pointer';
-            el.style.textDecoration = '';
-        } else {
-            el.classList.add('pdp-unavail');
-            el.style.opacity = '0.35';
-            el.style.cursor = 'not-allowed';
-            el.style.textDecoration = 'line-through';
-        }
-    });
-}
-
-function updatePdpState() {
-    if (productType !== 'variant') return;
-
-    const allSelected = Object.keys(selectedOpts).length === totalAttrs;
-
-    const priceEl = document.getElementById('displayPrice');
-    const stockEl = document.getElementById('varStockMsg');
-    const skuEl   = document.getElementById('variantSku');
-
-    if (!allSelected) {
-        stockEl.innerHTML = '<i class="fas fa-hand-point-down"></i> Select all options';
-        enableButtons(false);
-        return;
-    }
-
-    const key = Object.values(selectedOpts)
-        .map(Number)
-        .sort((a,b)=>a-b)
-        .join(',');
-
-    const v = variantMap[key];
-
-    if (!v) {
-        stockEl.innerHTML = '<i class="fas fa-times-circle"></i> Combination unavailable';
-        stockEl.style.color = 'var(--err)';
-        enableButtons(false);
-        return;
-    }
-
-    priceEl.textContent =
-        'BTN ' + parseFloat(v.price).toLocaleString('en-IN',{
-            minimumFractionDigits:2,
-            maximumFractionDigits:2
-        });
-
-    skuEl.style.display = '';
-    skuEl.innerHTML =
-        'SKU: <span style="font-family:monospace">' + (v.sku || '—') + '</span>';
-
-    const inStock = v.stock_type === 'unlimited' || v.stock > 0;
-
-    stockEl.style.color = inStock ? 'var(--ok)' : 'var(--err)';
-    stockEl.innerHTML = inStock
-        ? '<i class="fas fa-check-circle"></i> In Stock'
-        : '<i class="fas fa-times-circle"></i> Out of Stock';
-
-    enableButtons(inStock);
-}
-
 
 function enableButtons(enable) {
   const atc = document.getElementById('atcBtn');
@@ -918,19 +798,7 @@ function detectLocation() {
 
 // Auto-detect on load
 document.addEventListener('DOMContentLoaded', () => {
-    detectLocation();
-
-    if (productType === 'variant' && attrOrder.length > 1) {
-      for (let i = 1; i < attrOrder.length; i++) {
-          document.querySelectorAll(`.pdp-opt[data-attr="${attrOrder[i]}"]`)
-              .forEach(el => {
-                  el.classList.add('pdp-unavail');
-                  el.style.opacity = '0.35';
-                  el.style.cursor = 'not-allowed';
-                  el.style.textDecoration = 'line-through';
-              });
-      }
-  }
+  detectLocation();
 
   @auth
   // Check wishlist status

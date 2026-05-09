@@ -11,6 +11,13 @@ class OrderService {
             $subtotal = array_sum(array_map(fn($i) => $i['price'] * $i['qty'], $cartItems));
             $shipping = $subtotal >= 5000 ? 0 : 150; // Free shipping over BTN 5000
 
+            foreach ($cartItems as $item) {
+                $product = \App\Models\Product::find($item['product_id']);
+                if ($product) {
+                    $this->productService->checkStock( $product, $item['variant_id'], $item['qty'] );
+                }
+            }
+
             $order = Order::create([
                 'order_number'      => Order::generateNumber(),
                 'user_id'           => Auth::id(),
